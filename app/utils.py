@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import cv2
 from model import UNetPP
 def load_model(path="best_model.pth", device="cpu"):
     model = UNetPP(in_channels=3)
