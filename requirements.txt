@@ -3,3 +3,4 @@ torchvision
 numpy
 Pillow
 streamlit
+opencv-python-headless
