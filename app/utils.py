@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from model import UNetPP
-def load_model(path="best_model.pth", device="cpu"):
+def load_model(path="/app/best_model.pth", device="cpu"):
     model = UNetPP(in_channels=3)
     model.load_state_dict(torch.load(path, map_location=device))
     model.to(device)
