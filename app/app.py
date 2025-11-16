@@ -2,8 +2,7 @@ import streamlit as st
 import torch
 import numpy as np
 from PIL import Image
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
+import torchvision.transforms as T
 
 from utils import (
     load_model,
@@ -22,7 +21,9 @@ def _load_model():
 
 model = _load_model()
 
-transform = A.Compose([ToTensorV2()])
+transform = T.Compose([
+    T.ToTensor(),
+])
 
 st.title("Сегментация сосудов")
 
