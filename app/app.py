@@ -17,7 +17,7 @@ st.set_page_config(page_title="Сегментация сосудов (патчи
 @st.cache_resource
 def _load_model():
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    return load_model("/app/best_model.pth", device=device)
+    return load_model("app/best_model.pth", device=device)
 
 model = _load_model()
 
