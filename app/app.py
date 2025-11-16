@@ -87,9 +87,11 @@ if st.button("Запустить сегментацию") and img_file:
     for y in range(0, h - patch_size + 1, stride):
         for x in range(0, w - patch_size + 1, stride):
             patch = img_full[y:y+patch_size, x:x+patch_size]
-            patch_t = transform(image=(patch * 255).astype(np.uint8))["image"]
-            patch_t = patch_t.float() / 255.0
-            patches_list.append(patch_t)
+            if patch.ndim == 2:
+                patch = np.expand_dims(patch, axis=-1)
+            patch_pil = Image.fromarray((patch * 255).astype(np.uint8))
+            patch_tensor = transform(patch_pil)
+            patches_list.append(patch_tensor)
             coords.append((y, x))
     patches_tensor = torch.stack(patches_list).float().to("cpu")
 
