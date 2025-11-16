@@ -1,6 +1,0 @@
-streamlit
-torch
-numpy
-opencv-python
-Pillow
-albumentations
