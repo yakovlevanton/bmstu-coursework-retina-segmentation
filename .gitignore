@@ -1,0 +1,38 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# --- Virtual environments ---
+venv/
+.env/
+.venv/
+
+# --- Streamlit cache ---
+.streamlit/
+~/.streamlit/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Model checkpoints ---
+*.pt
+*.ckpt
+
+# Если хочешь хранить модель в репо,
+# то нужно убрать *.pth из ignore
+# и добавить путь например так:
+# !models/best_model.pth
+
+# --- OS artifacts ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- Temporary files ---
+*.tmp
+*.bak
