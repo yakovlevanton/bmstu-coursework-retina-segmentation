@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from PIL import Image
 import torchvision.transforms as T
+import time
 
 from utils import (
     load_model,
@@ -10,16 +11,16 @@ from utils import (
     create_error_map,
 )
 
-
 st.set_page_config(page_title="Сегментация сосудов (патчи)", layout="wide")
 
 
 @st.cache_resource
 def _load_model():
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    return load_model("app/best_model.pth", device=device)
+    return load_model("app/best_model.pth", device=device), device
 
-model = _load_model()
+
+model, device = _load_model()
 
 transform = T.Compose([
     T.ToTensor(),
@@ -27,14 +28,17 @@ transform = T.Compose([
 
 st.title("Сегментация сосудов")
 
-# ---- Uploaders ----
+st.sidebar.header("Параметры")
+binary_threshold = st.sidebar.slider(
+    "Порог бинаризации предсказания", 0.1, 0.9, 0.5, 0.05
+)
+patch_size = st.sidebar.selectbox("Размер патча", [64, 96, 128, 160, 192], index=2)
+stride = st.sidebar.selectbox("Шаг свёртки", [16, 32, 48, 64, 96], index=3)
+batch_size = st.sidebar.selectbox("Batch size", [4, 8, 16, 32], index=2)
 img_file = st.file_uploader("Загрузите изображение (tif)", type=["tif", "tiff"])
 gt_file = st.file_uploader("Загрузите маску сосудов (gif)", type=["gif"])
 fov_file = st.file_uploader("Загрузите FOV (gif)", type=["gif"])
 
-patch_size = 128
-stride = 64
-batch_size = 16
 
 
 def dice_score(pred, gt):
@@ -43,6 +47,7 @@ def dice_score(pred, gt):
     inter = (pred & gt).sum()
     return 2 * inter / (pred.sum() + gt.sum() + 1e-8)
 
+
 def iou_score(pred, gt):
     pred = pred.astype(bool)
     gt = gt.astype(bool)
@@ -50,19 +55,21 @@ def iou_score(pred, gt):
     union = (pred | gt).sum()
     return inter / (union + 1e-8)
 
+
 def accuracy(pred, gt):
     return (pred == gt).mean()
+
 
 def sensitivity(pred, gt):
     tp = (pred * gt).sum()
     fn = ((1 - pred) * gt).sum()
     return tp / (tp + fn + 1e-8)
 
+
 def specificity(pred, gt):
     tn = ((1 - pred) * (1 - gt)).sum()
     fp = (pred * (1 - gt)).sum()
     return tn / (tn + fp + 1e-8)
-
 
 
 if img_file is not None:
@@ -84,27 +91,50 @@ if st.button("Запустить сегментацию") and img_file:
     patches_list = []
     coords = []
 
+    progress = st.progress(0)
+    status = st.empty()
+
+    total_patches = ((h - patch_size) // stride + 1) * ((w - patch_size) // stride + 1)
+
+    patch_counter = 0
+
     for y in range(0, h - patch_size + 1, stride):
         for x in range(0, w - patch_size + 1, stride):
-            patch = img_full[y:y+patch_size, x:x+patch_size]
+
+            patch = img_full[y:y + patch_size, x:x + patch_size]
             if patch.ndim == 2:
                 patch = np.expand_dims(patch, axis=-1)
+
             patch_pil = Image.fromarray((patch * 255).astype(np.uint8))
             patch_tensor = transform(patch_pil)
+
             patches_list.append(patch_tensor)
             coords.append((y, x))
-    patches_tensor = torch.stack(patches_list).float().to("cpu")
+
+            patch_counter += 1
+            progress.progress(patch_counter / total_patches)
+            status.write(f"Извлечение патчей: {patch_counter}/{total_patches}")
+
+    patches_tensor = torch.stack(patches_list).float().to(device)
 
     pred_patches = []
 
+    t_start = time.time()
     with torch.no_grad():
         for i in range(0, len(patches_tensor), batch_size):
-            batch = patches_tensor[i:i+batch_size]
+            batch = patches_tensor[i:i + batch_size]
+
             pred = model(batch)
-            pred_bin = (pred > 0.5).float()
+            pred_bin = (pred > binary_threshold).float()
             pred_patches.append(pred_bin.cpu().numpy().squeeze(1))
+    t_end = time.time()
+
+    inference_time = t_end - t_start
+    speed_msg = f"⏱ Время инференса модели: **{inference_time:.3f} сек**"
 
     pred_patches_np = np.concatenate(pred_patches, axis=0)
+
+
 
     pred_full = reconstruct_from_patches(pred_patches_np, (h, w), stride=stride)
     pred_full = np.squeeze(pred_full)
@@ -114,6 +144,7 @@ if st.button("Запустить сегментацию") and img_file:
     else:
         pred_plot = pred_full
 
+
     st.subheader("Результаты")
 
     col1, col2 = st.columns(2)
@@ -122,6 +153,7 @@ if st.button("Запустить сегментацию") and img_file:
     if gt_file:
         col2.image((gt_full * 255).astype(np.uint8), caption="GT маска", width=600)
 
+    st.markdown(speed_msg)
 
     if gt_file:
         error_map = create_error_map(pred_plot, gt_full)
@@ -146,6 +178,7 @@ if st.button("Запустить сегментацию") and img_file:
         **Sensitivity (Recall):** {sens:.4f}  
         **Specificity:** {spec:.4f}  
         """)
+
 
     st.subheader("Параметры изображения")
 
