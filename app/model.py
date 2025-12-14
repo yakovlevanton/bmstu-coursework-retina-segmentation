@@ -9,21 +9,9 @@ def conv_block(in_channels, out_channels):
         nn.BatchNorm2d(out_channels),
         nn.ReLU(inplace=True)
     )
-
-def conv_block(in_channels, out_channels):
-    return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-        nn.BatchNorm2d(out_channels),
-        nn.ReLU(inplace=True),
-        nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-        nn.BatchNorm2d(out_channels),
-        nn.ReLU(inplace=True)
-    )
-
 class UNetPP(nn.Module):
     def __init__(self, in_channels=3):
         super().__init__()
-        # Encoding path
         self.conv0_0 = conv_block(in_channels, 32)
         self.pool0 = nn.MaxPool2d(2)
 
