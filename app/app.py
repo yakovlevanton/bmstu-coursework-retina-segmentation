@@ -33,8 +33,8 @@ binary_threshold = st.sidebar.slider(
     "Порог бинаризации предсказания", 0.1, 0.9, 0.5, 0.05
 )
 patch_size = st.sidebar.selectbox("Размер патча", [64, 96, 128, 160, 192], index=2)
-stride = st.sidebar.selectbox("Шаг свёртки", [16, 32, 48, 64, 96], index=3)
-batch_size = st.sidebar.selectbox("Batch size", [4, 8, 16, 32], index=2)
+stride = st.sidebar.selectbox("Шаг патчей", [16, 32, 48, 64, 96], index=3)
+batch_size = st.sidebar.selectbox("Размер батча", [4, 8, 16, 32], index=2)
 img_file = st.file_uploader("Загрузите изображение (tif)", type=["tif", "tiff"])
 gt_file = st.file_uploader("Загрузите маску сосудов (gif)", type=["gif"])
 fov_file = st.file_uploader("Загрузите FOV (gif)", type=["gif"])
