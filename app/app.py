@@ -35,8 +35,8 @@ binary_threshold = st.sidebar.slider(
 patch_size = st.sidebar.selectbox("Размер патча", [64, 96, 128, 160, 192], index=2)
 stride = st.sidebar.selectbox("Шаг патчей", [16, 32, 48, 64, 96], index=3)
 batch_size = st.sidebar.selectbox("Размер батча", [4, 8, 16, 32], index=2)
-img_file = st.file_uploader("Загрузите изображение (tif)", type=["tif", "tiff"])
-gt_file = st.file_uploader("Загрузите маску сосудов (gif)", type=["gif"])
+img_file = st.file_uploader("Загрузите изображение (tif)", type=["tif", "tiff", "jpg"])
+gt_file = st.file_uploader("Загрузите маску сосудов (gif)", type=["gif", "png"])
 fov_file = st.file_uploader("Загрузите FOV (gif)", type=["gif"])
 
 
@@ -76,9 +76,24 @@ if img_file is not None:
     img_full = np.array(Image.open(img_file)).astype(np.float32) / 255.0
     st.image((img_full * 255).astype(np.uint8), caption="Исходное изображение", width=600)
 
+def make_fov(image, threshold=0.05):
+    """
+    Генерация FOV-маски из изображения.
+    image: numpy array [H, W] или [H, W, C] с float32 [0,1]
+    """
+    if image.ndim == 3:
+        gray = image.mean(axis=-1)
+    else:
+        gray = image
+    fov = gray > threshold
+    return fov.astype(np.uint8)
+
+
 if fov_file:
     fov_full = np.array(Image.open(fov_file).convert("L"))
     fov_full = (fov_full > 127).astype(np.uint8)
+else:
+    fov_full = make_fov(img_full)
 
 if gt_file:
     gt_full = np.array(Image.open(gt_file).convert("L"))
