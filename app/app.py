@@ -71,11 +71,6 @@ def specificity(pred, gt):
     fp = (pred * (1 - gt)).sum()
     return tn / (tn + fp + 1e-8)
 
-
-if img_file is not None:
-    img_full = np.array(Image.open(img_file)).astype(np.float32) / 255.0
-    st.image((img_full * 255).astype(np.uint8), caption="Исходное изображение", width=600)
-
 def make_fov(image, threshold=0.05):
     """
     Генерация FOV-маски из изображения.
@@ -87,14 +82,16 @@ def make_fov(image, threshold=0.05):
         gray = image
     fov = gray > threshold
     return fov.astype(np.uint8)
-
-
-if fov_file:
-    fov_full = np.array(Image.open(fov_file).convert("L"))
-    fov_full = (fov_full > 127).astype(np.uint8)
-else:
-    fov_full = make_fov(img_full)
-
+    
+if img_file is not None:
+    img_full = np.array(Image.open(img_file)).astype(np.float32) / 255.0
+    st.image((img_full * 255).astype(np.uint8), caption="Исходное изображение", width=600)
+    if fov_file:
+        fov_full = np.array(Image.open(fov_file).convert("L"))
+        fov_full = (fov_full > 127).astype(np.uint8)
+    else:
+        fov_full = make_fov(img_full)
+        
 if gt_file:
     gt_full = np.array(Image.open(gt_file).convert("L"))
     gt_full = (gt_full > 127).astype(np.uint8)
