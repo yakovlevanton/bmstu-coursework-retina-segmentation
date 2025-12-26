@@ -1,5 +1,6 @@
 ## Приложение доступно по ссылке: https://retina-segmentation.streamlit.app/  
-## Ссылка на датасет: https://www.kaggle.com/datasets/andrewmvd/drive-digital-retinal-images-for-vessel-extraction
+## Ссылки на датасеты: https://www.kaggle.com/datasets/andrewmvd/drive-digital-retinal-images-for-vessel-extraction
+## https://www.kaggle.com/datasets/khoongweihao/chasedb1
 ### Есть два режима работы:
 1) С размеченными изображениями - выгружаете снимок сетчатки, бинарную маску сосудов (ground truth) и FOV-маску (Field of view - область изображения, в пределах которой производится сегментации).
    Результат - сегментированные сосуды в виде бинарной маски, карта ошибок по сравнению с ground truth, основные метрики.
